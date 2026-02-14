@@ -26,24 +26,12 @@ No additional setup needed! Just log in when the browser opens.
 
 ## Setup
 
-### 1. Install Dependencies
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Set Up Google Drive API Credentials
-
-To access private Google Drive files, you need to create OAuth 2.0 credentials:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable the **Google Drive API**:
-   - Go to "APIs & Services" > "Library"
-   - Search for "Google Drive API"
-   - Click "Enable"
-4. Create OAuth 2.0 credentials:
-   - Go to "APIs & Services" > "Credentials"
 ### Browser-based Method (Recommended for beginners)
 
 Run the browser-based script:
@@ -53,16 +41,6 @@ python main_browser.py
 ```
 
 A browser will open. Log in to your Google account if needed, then the file will download automatically.
-
-### API-based Method
-
-Run the APIick "Create Credentials" > "OAuth client ID"
-   - Select "Desktop app" as the application type
-   - Give it a name (e.g., "Drive Downloader")
-   - Click "Create"
-5. Download the credentials file:
-   - Click the download button next to your newly created OAuth client
-   - Save the file as `credentials.json` in the same directory as `main.py`
 
 ## Usage
 
@@ -110,11 +88,11 @@ For a row with:
 - Place: NYC
 - Event: TeamBuilding
 - Name: John Doe
-- Participants: Marko Horvat, Ana Kovačić
+- Participants: John Snow, Lionel Messi
 
 Output:
 - Image: `142_NYC_TeamBuilding_PaidBy_JohnDoe.jpg`
-- PDF: `142_NYC_TeamBuilding_PaidBy_JohnDoe.pdf` (with "Marko Horvat, Ana Kovačić" as header)
+- PDF: `142_NYC_TeamBuilding_PaidBy_JohnDoe.pdf` (with "John Snow, Lionel Messi" as header)
 
 ## Notes
 
