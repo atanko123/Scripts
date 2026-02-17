@@ -23,6 +23,8 @@ from reportlab.lib.utils import ImageReader
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+import barcode
+from barcode.writer import ImageWriter
 
 
 def extract_file_id(url):
@@ -201,6 +203,105 @@ def download_with_browser(driver, drive_url, output_path, download_dir):
         driver.quit()
         return None
 
+def process_excel_file_for_barcodes(excel_file, headless=False):
+    """
+    Process an Excel file specifically for barcodes.
+    Expected columns: name, code
+    """
+    # Check if file exists
+    if not os.path.exists(excel_file):
+        print(f"Error: File '{excel_file}' not found")
+        return
+
+    # Read Excel file
+    print(f"Reading Excel file: {excel_file}")
+    try:
+        # Read without header, assign column names manually
+        df = pd.read_excel(excel_file, header=None, names=['name', 'code'])
+    except Exception as e:
+        print(f"Error reading Excel file: {str(e)}")
+        return None
+
+    # Verify required columns
+    required_columns = ['name', 'code']
+    missing_columns = [col for col in required_columns if col not in df.columns]
+
+    if missing_columns:
+        print(f"Error: Missing required columns: {', '.join(missing_columns)}")
+        print(f"Available columns: {', '.join(map(str, df.columns))}")
+        return
+
+    print(f"Loaded {len(df)} records")
+    print(f"Columns: {', '.join(df.columns)}\n")
+    
+    # Create output directory for barcodes
+    output_dir = "barcodes"
+    os.makedirs(output_dir, exist_ok=True)
+    print(f"Output directory: {output_dir}")
+    print("=" * 80)
+    
+    # Process each row
+    successful = 0
+    failed = 0
+    
+    for idx, row in df.iterrows():
+        name = sanitize_filename(row['name']) if not pd.isna(row['name']) else f"barcode_{idx}"
+        code = str(row['code']).strip() if not pd.isna(row['code']) else ""
+        
+        print(f"\n[{idx + 1}/{len(df)}] Processing:")
+        print(f"  Name: {name}")
+        print(f"  Code: {code}")
+        
+        # Check if code exists
+        if not code:
+            print("  ✗ Skipping: No code provided")
+            failed += 1
+            continue
+        
+        # Create filename
+        filename = f"{name}.png"
+        output_path = os.path.join(output_dir, filename)
+        
+        # Check if file already exists
+        if os.path.exists(output_path):
+            print(f"  ⊘ Skipping: File already exists - {filename}")
+            successful += 1
+            continue
+        
+        try:
+            # Generate barcode (using Code128 by default, you can change to EAN13, etc.)
+            # Code128 is versatile and works with alphanumeric codes
+            EAN = barcode.get_barcode_class('code128')
+            
+            # Configure writer options for smaller text
+            writer_options = {
+                'font_size': 7,  # Smaller font size (default is 10)
+                'text_distance': 4,  # Distance between barcode and text
+            }
+            
+            ean = EAN(code, writer=ImageWriter())
+            
+            # Save without extension as it will be added automatically
+            output_path_no_ext = os.path.join(output_dir, name)
+            saved_path = ean.save(output_path_no_ext, options=writer_options)
+            
+            print(f"  ✓ Barcode saved: {os.path.basename(saved_path)}")
+            
+            successful += 1
+            
+        except Exception as e:
+            print(f"  ✗ Error generating barcode: {str(e)}")
+            failed += 1
+    
+    # Summary
+    print("\n" + "=" * 80)
+    print(f"\nBarcode Generation Summary:")
+    print(f"  ✓ Successful: {successful}")
+    print(f"  ✗ Failed: {failed}")
+    print(f"  Total: {len(df)}")
+    print(f"\nBarcodes saved to: {output_dir}/")
+
+
 def process_excel_file(excel_file, headless=False):
     """
     Process an Excel file with Google Drive URLs and download all files.
@@ -357,11 +458,9 @@ def process_excel_file(excel_file, headless=False):
 def main():
     """Main function."""
     print("=" * 80)
-    print("Google Drive Batch Downloader (Browser-based)")
+    print("Google Drive Batch Downloader (Browser-based) or Barcode Processor")
     print("=" * 80)
-    print("\nThis will read URLs from an Excel file and download all images.")
-    print("Expected columns: id, url, participants, name, event, place")
-    print("Files will be named: id_place_event_PaidBy_name.jpg\n")
+    print("\nThis will read URLs from an Excel file and download all images or process barcodes based on the file provided.")
     
     # Check for command-line argument
     if len(sys.argv) > 1:
@@ -376,7 +475,10 @@ def main():
         return
     
     # Process the Excel file
-    process_excel_file(excel_file, False)
+    if excel_file == 'Barcodes.xlsx':
+        process_excel_file_for_barcodes(excel_file, True)
+    else:
+        process_excel_file(excel_file, False)
 
 
 if __name__ == "__main__":

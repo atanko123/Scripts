@@ -1,28 +1,22 @@
-# Google Drive Image Downloader
+# Google Drive Image Downloader & Barcode Generator
 
-A Python script to download images (or any files) from Google Drive using authentication.
+A Python script with two main features:
+1. Download images from Google Drive with custom naming and PDF generation
+2. Generate Code128 barcode images from Excel data
 
-## Two Methods Available
+## Features
 
-### Method 1: Browser-based (Simpler) - `main_browser.py`
+### Feature 1: Google Drive Image Downloader
 - Opens a browser where you manually log in to Google
+- Batch downloads images from Google Drive URLs
+- Creates PDFs with custom headers
 - No OAuth setup required
-- More user-friendly
 
-### Method 2: API-based - `main.py`
-- Usea. Browser-based Method (Simpler)
-
-Install Chrome browser if not already installed, then run:
-
-```bash
-python main_browser.py
-```
-
-No additional setup needed! Just log in when the browser opens.
-
-### 2b. API-based Method - Google Drive API with OAuth
-- Requires setup of credentials
-- Better for automation
+### Feature 2: Barcode Generator
+- Generates Code128 barcodes from Excel file
+- Saves barcodes as PNG images with text below
+- Customizable text size
+- Automatic file naming from Excel data
 
 ## Setup
 
@@ -44,6 +38,8 @@ A browser will open. Log in to your Google account if needed, then the file will
 
 ## Usage
 
+### Google Drive Image Downloader
+
 Run the script:
 
 ```bash
@@ -55,6 +51,16 @@ Or with a filename argument:
 ```bash
 python3 main_browser.py july.xlsx
 ```
+
+#### Excel Format
+
+Expected columns (no header):
+- Column 1: id
+- Column 2: url (Google Drive URL)
+- Column 3: participants
+- Column 4: name
+- Column 5: event
+- Column 6: place
 
 ### What Happens
 
@@ -81,6 +87,52 @@ python3 main_browser.py july.xlsx
 - Header text from participants column (large font, 48pt)
 - Supports special characters (č, š, ž, đ)
 
+
+### Barcode Generator
+
+### Google Drive Downloads
+- Browser stays open during batch downloads (login once, download all)
+- Files are only downloaded once (checks for existing files)
+- PDFs are recreated if missing, even when images exist
+- Special characters in headers are fully supported
+
+### Barcode Generation
+- Automatically detects `Barcodes.xlsx` and switches to barcode mode
+- Code128 format supports letters, numbers, and special characters
+- Existing barcodes are skipped (won't regenerate)
+- Invalid or empty codes are skipped with error message
+```
+
+#### Excel Format
+
+Expected columns (no header):
+- Column 1: name (used as filename)
+- Column 2: code (barcode value)
+
+#### What Happens
+
+1. Reads Excel file with name and code columns
+2. Generates Code128 barcodes with text below
+3. Saves as PNG images to `barcodes/` folder
+4. Skips existing files automatically
+
+#### Output
+
+**Barcodes**: Saved to `barcodes/` as:
+```
+{name}.png
+```
+
+Example:
+- If name = "Product_ABC" and code = "123456789"
+- Output: `barcodes/Product_ABC.png` (barcode image with "123456789" text below)
+
+#### Barcode Settings
+
+- Font size: 7pt (compact text)
+- Text distance: 4px below barcode
+- Format: Code128 (supports alphanumeric)
+- Image format: PNG
 ### Example
 
 For a row with:
