@@ -216,8 +216,16 @@ def process_excel_file_for_barcodes(excel_file, headless=False):
     # Read Excel file
     print(f"Reading Excel file: {excel_file}")
     try:
-        # Read without header, assign column names manually
-        df = pd.read_excel(excel_file, header=None, names=['name', 'code'])
+        # Read without header, only first 2 columns, assign column names manually
+        df = pd.read_excel(excel_file, header=None, usecols=[0, 1], names=['name', 'code'])
+        # Reset index to ensure it's a simple integer index (not MultiIndex)
+        df = df.reset_index(drop=True)
+        # Remove empty rows (where both name and code are empty/NaN)
+        df = df.dropna(how='all')
+        # Also remove rows where code is empty (since we need code to generate barcode)
+        df = df[df['code'].notna() & (df['code'].astype(str).str.strip() != '')]
+        # Reset index again after filtering
+        df = df.reset_index(drop=True)
     except Exception as e:
         print(f"Error reading Excel file: {str(e)}")
         return None
@@ -475,7 +483,8 @@ def main():
         return
     
     # Process the Excel file
-    if excel_file == 'Barcodes.xlsx':
+    # Check basename to support paths like nov/Barcodes.xlsx
+    if os.path.basename(excel_file) == 'Barcodes.xlsx':
         process_excel_file_for_barcodes(excel_file, True)
     else:
         process_excel_file(excel_file, False)
